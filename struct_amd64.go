@@ -165,7 +165,7 @@ func tryPlaceRegister(v reflect.Value, addFloat func(uintptr), addInt func(uintp
 				place(f)
 			case reflect.Bool:
 				if f.Bool() {
-					val |= 1
+					val |= 1 << shift
 				}
 				shift += 8
 				class |= _INTEGER
@@ -260,5 +260,28 @@ func placeStack(v reflect.Value, addStack func(uintptr)) {
 }
 
 func placeRegisters(v reflect.Value, addFloat func(uintptr), addInt func(uintptr)) {
-	panic("purego: not needed on amd64")
+	panic("purego: placeRegisters not implemented on amd64")
+}
+
+// shouldBundleStackArgs always returns false on non-Darwin platforms
+// since C-style stack argument bundling is only needed on Darwin ARM64.
+func shouldBundleStackArgs(v reflect.Value, numInts, numFloats int) bool {
+	return false
+}
+
+// structFitsInRegisters is not used on amd64.
+func structFitsInRegisters(val reflect.Value, tempNumInts, tempNumFloats int) (bool, int, int) {
+	panic("purego: structFitsInRegisters should not be called on amd64")
+}
+
+// collectStackArgs is not used on amd64.
+func collectStackArgs(args []reflect.Value, startIdx int, numInts, numFloats int,
+	keepAlive []any, addInt, addFloat, addStack func(uintptr),
+	pNumInts, pNumFloats, pNumStack *int) ([]reflect.Value, []any) {
+	panic("purego: collectStackArgs should not be called on amd64")
+}
+
+// bundleStackArgs is not used on amd64.
+func bundleStackArgs(stackArgs []reflect.Value, addStack func(uintptr)) {
+	panic("purego: bundleStackArgs should not be called on amd64")
 }

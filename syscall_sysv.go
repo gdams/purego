@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2022 The Ebitengine Authors
 
-//go:build darwin || freebsd || (linux && (amd64 || arm64 || loong64)) || netbsd
+//go:build darwin || freebsd || (linux && (amd64 || arm64 || loong64 || riscv64)) || netbsd
 
 package purego
 
@@ -217,10 +217,22 @@ func callbackasmAddr(i int) uintptr {
 		panic("purego: unsupported architecture")
 	case "386", "amd64":
 		entrySize = 5
-	case "arm", "arm64", "loong64":
-		// On ARM and ARM64, each entry is a MOV instruction
+	case "arm", "arm64", "loong64", "riscv64":
+		// On ARM, ARM64, Loong64, and RISCV64, each entry is a MOV instruction
 		// followed by a branch instruction
 		entrySize = 8
 	}
 	return callbackasmABI0 + uintptr(i*entrySize)
+}
+
+// getCallbackStart returns the start address of the callback region.
+// TODO: Remove this function once callback tight packing is implemented.
+func getCallbackStart() uintptr {
+	return callbackasmABI0
+}
+
+// getMaxCB returns the maximum number of callbacks.
+// TODO: Remove this function once callback tight packing is implemented.
+func getMaxCB() int {
+	return maxCB
 }
