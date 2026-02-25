@@ -8,8 +8,9 @@
 #include "go_asm.h"
 #include "funcdata.h"
 
-#define STACK_SIZE 80
-#define PTR_ADDRESS (STACK_SIZE - 8)
+#define STACK_SIZE 96
+#define PTR_ADDRESS 72
+#define R12_SAVE 80
 
 // syscall15X calls a function in libc on behalf of the syscall package.
 // syscall15X takes a pointer to a struct like:
@@ -42,7 +43,8 @@ TEXT syscall15X(SB), NOSPLIT|NOFRAME, $0
 	PUSHQ BP
 	MOVQ  SP, BP
 	SUBQ  $STACK_SIZE, SP
-	MOVQ  DI, PTR_ADDRESS(BP) // save the pointer
+	MOVQ  DI, PTR_ADDRESS(SP) // save the pointer
+	MOVQ  R12, R12_SAVE(SP)   // preserve callee-saved register for SysV ABI
 	MOVQ  DI, R11
 
 	MOVQ syscall15Args_f1(R11), X0 // f1
@@ -85,7 +87,7 @@ TEXT syscall15X(SB), NOSPLIT|NOFRAME, $0
 	MOVQ syscall15Args_fn(R11), R10 // fn
 	CALL R10
 
-	MOVQ PTR_ADDRESS(BP), DI      // get the pointer back
+	MOVQ PTR_ADDRESS(SP), DI      // get the pointer back
 	MOVQ AX, syscall15Args_a1(DI) // r1
 	MOVQ DX, syscall15Args_a2(DI) // r3
 	MOVQ X0, syscall15Args_f1(DI) // f1
@@ -99,6 +101,7 @@ TEXT syscall15X(SB), NOSPLIT|NOFRAME, $0
 #endif
 
 	XORL AX, AX          // no error (it's ignored anyway)
+	MOVQ R12_SAVE(SP), R12
 	ADDQ $STACK_SIZE, SP
 	MOVQ BP, SP
 	POPQ BP
