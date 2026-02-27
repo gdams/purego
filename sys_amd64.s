@@ -8,10 +8,6 @@
 #include "go_asm.h"
 #include "funcdata.h"
 
-#define STACK_SIZE 96
-#define PTR_ADDRESS 72
-#define R12_SAVE 80
-
 // syscall15X calls a function in libc on behalf of the syscall package.
 // syscall15X takes a pointer to a struct like:
 // struct {
@@ -39,12 +35,8 @@
 // C calling convention (use libcCall).
 GLOBL ·syscall15XABI0(SB), NOPTR|RODATA, $8
 DATA ·syscall15XABI0(SB)/8, $syscall15X(SB)
-TEXT syscall15X(SB), NOSPLIT|NOFRAME, $0
-	PUSHQ BP
-	MOVQ  SP, BP
-	SUBQ  $STACK_SIZE, SP
-	MOVQ  DI, PTR_ADDRESS(SP) // save the pointer
-	MOVQ  R12, R12_SAVE(SP)   // preserve callee-saved register for SysV ABI
+TEXT syscall15X(SB), NOSPLIT, $80
+	MOVQ  DI, $72(SP) // save the pointer
 	MOVQ  DI, R11
 
 	MOVQ syscall15Args_f1(R11), X0 // f1
@@ -63,33 +55,33 @@ TEXT syscall15X(SB), NOSPLIT|NOFRAME, $0
 	MOVQ syscall15Args_a5(R11), R8 // a5
 	MOVQ syscall15Args_a6(R11), R9 // a6
 
-	// push the remaining paramters onto the stack
-	MOVQ syscall15Args_a7(R11), R12
-	MOVQ R12, 0(SP)                  // push a7
-	MOVQ syscall15Args_a8(R11), R12
-	MOVQ R12, 8(SP)                  // push a8
-	MOVQ syscall15Args_a9(R11), R12
-	MOVQ R12, 16(SP)                 // push a9
-	MOVQ syscall15Args_a10(R11), R12
-	MOVQ R12, 24(SP)                 // push a10
-	MOVQ syscall15Args_a11(R11), R12
-	MOVQ R12, 32(SP)                 // push a11
-	MOVQ syscall15Args_a12(R11), R12
-	MOVQ R12, 40(SP)                 // push a12
-	MOVQ syscall15Args_a13(R11), R12
-	MOVQ R12, 48(SP)                 // push a13
-	MOVQ syscall15Args_a14(R11), R12
-	MOVQ R12, 56(SP)                 // push a14
-	MOVQ syscall15Args_a15(R11), R12
-	MOVQ R12, 64(SP)                 // push a15
+	// push the remaining parameters onto the stack
+	MOVQ syscall15Args_a7(R11), R10
+	MOVQ R10, 0(SP)                  // push a7
+	MOVQ syscall15Args_a8(R11), R10
+	MOVQ R10, 8(SP)                  // push a8
+	MOVQ syscall15Args_a9(R11), R10
+	MOVQ R10, 16(SP)                 // push a9
+	MOVQ syscall15Args_a10(R11), R10
+	MOVQ R10, 24(SP)                 // push a10
+	MOVQ syscall15Args_a11(R11), R10
+	MOVQ R10, 32(SP)                 // push a11
+	MOVQ syscall15Args_a12(R11), R10
+	MOVQ R10, 40(SP)                 // push a12
+	MOVQ syscall15Args_a13(R11), R10
+	MOVQ R10, 48(SP)                 // push a13
+	MOVQ syscall15Args_a14(R11), R10
+	MOVQ R10, 56(SP)                 // push a14
+	MOVQ syscall15Args_a15(R11), R10
+	MOVQ R10, 64(SP)                 // push a15
 	XORL AX, AX                      // vararg: say "no float args"
 
 	MOVQ syscall15Args_fn(R11), R10 // fn
 	CALL R10
 
-	MOVQ PTR_ADDRESS(SP), DI      // get the pointer back
+	MOVQ $72(SP), DI      // get the pointer back
 	MOVQ AX, syscall15Args_a1(DI) // r1
-	MOVQ DX, syscall15Args_a2(DI) // r3
+	MOVQ DX, syscall15Args_a2(DI) // r2
 	MOVQ X0, syscall15Args_f1(DI) // f1
 	MOVQ X1, syscall15Args_f2(DI) // f2
 
@@ -101,10 +93,6 @@ TEXT syscall15X(SB), NOSPLIT|NOFRAME, $0
 #endif
 
 	XORL AX, AX          // no error (it's ignored anyway)
-	MOVQ R12_SAVE(SP), R12
-	ADDQ $STACK_SIZE, SP
-	MOVQ BP, SP
-	POPQ BP
 	RET
 
 TEXT callbackasm1(SB), NOSPLIT|NOFRAME, $0
