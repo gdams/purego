@@ -27,7 +27,7 @@ func TestAllThreadsSyscall(t *testing.T) {
 // CGO_ENABLED=0 or 1.
 func TestSetuidEtc(t *testing.T) {
 	switch runtime.GOARCH {
-	case "386", "arm", "arm64", "loong64", "ppc64le", "riscv64", "s390x":
+	case "386", "arm", "loong64", "ppc64le", "riscv64", "s390x":
 		// These tests are flaky even with CGO_ENABLED=1
 		t.Skip("test is flaky")
 	}
