@@ -26,11 +26,6 @@ func TestAllThreadsSyscall(t *testing.T) {
 // here is considered authoritative and should compile and run
 // CGO_ENABLED=0 or 1.
 func TestSetuidEtc(t *testing.T) {
-	switch runtime.GOARCH {
-	case "386", "loong64":
-		// These tests are flaky when run in QEMU
-		t.Skip("test is flaky")
-	}
 	vs := []struct {
 		call           string
 		fn             func() error
