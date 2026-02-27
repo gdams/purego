@@ -64,7 +64,12 @@ TEXT ·setg_trampoline(SB), NOSPLIT, $16-16
 TEXT threadentry_trampoline(SB), NOSPLIT|NOFRAME, $0-0
 	// Called from C (pthread_create). Must save all C callee-saved registers.
 	// Uses NOFRAME for proper ELFv2 backchain via MOVDU.
-	MOVD LR, 16(R1)
+	//
+	// Note: MOVD LR, 16(R1) translates to mflr r31; std r31, 16(r1)
+	// on ppc64le which clobbers R31 before SAVE_GPR can save it.
+	// Use R0 as the intermediary instead to avoid clobbering R31.
+	MOVD LR, R0
+	MOVD R0, 16(R1)
 	MOVW CR, R0
 	MOVD R0, 8(R1)
 
@@ -85,7 +90,11 @@ TEXT threadentry_trampoline(SB), NOSPLIT|NOFRAME, $0-0
 
 	ADD $320, R1
 
-	MOVD 16(R1), LR
+	// Note: MOVD 16(R1), LR translates to ld r31, 16(r1); mtlr r31
+	// on ppc64le which clobbers R31 after RESTORE_GPR just restored it.
+	// Use R0 as the intermediary instead.
+	MOVD 16(R1), R0
+	MOVD R0, LR
 	MOVD 8(R1), R0
 	MOVW R0, CR
 	RET
