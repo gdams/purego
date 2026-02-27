@@ -7,6 +7,9 @@
 #include "go_asm.h"
 #include "funcdata.h"
 
+#define STACK_SIZE 64
+#define PTR_ADDRESS (STACK_SIZE - 8)
+
 // syscall15X calls a function in libc on behalf of the syscall package.
 // syscall15X takes a pointer to a struct like:
 // struct {
@@ -34,8 +37,9 @@
 // C calling convention (use libcCall).
 GLOBL ·syscall15XABI0(SB), NOPTR|RODATA, $8
 DATA ·syscall15XABI0(SB)/8, $syscall15X(SB)
-TEXT syscall15X(SB), NOSPLIT, $64
-	MOVD R0, 56(RSP)
+TEXT syscall15X(SB), NOSPLIT, $0
+	SUB  $STACK_SIZE, RSP     // push structure pointer
+	MOVD R0, PTR_ADDRESS(RSP)
 	MOVD R0, R9
 
 	FMOVD syscall15Args_f1(R9), F0 // f1
@@ -75,10 +79,11 @@ TEXT syscall15X(SB), NOSPLIT, $64
 	MOVD syscall15Args_fn(R9), R10 // fn
 	BL   (R10)
 
-	MOVD 56(RSP), R2 // restore structure pointer
+	MOVD PTR_ADDRESS(RSP), R2 // pop structure pointer
+	ADD  $STACK_SIZE, RSP
 
 	MOVD  R0, syscall15Args_a1(R2) // save r1
-	MOVD  R1, syscall15Args_a2(R2) // save r2
+	MOVD  R1, syscall15Args_a2(R2) // save r3
 	FMOVD F0, syscall15Args_f1(R2) // save f0
 	FMOVD F1, syscall15Args_f2(R2) // save f1
 	FMOVD F2, syscall15Args_f3(R2) // save f2
@@ -86,8 +91,8 @@ TEXT syscall15X(SB), NOSPLIT, $64
 
 #ifdef GOOS_darwin
 	BL   purego_error(SB)
-	MOVD 56(RSP), R2  // reload (R2 clobbered by call)
 	MOVD (R0), R0
 	MOVD R0, syscall15Args_a3(R2) // save errno
+
 #endif
 	RET
